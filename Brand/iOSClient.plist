@@ -4,15 +4,15 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.nextcloud.refreshTask</string>
-		<string>com.nextcloud.processingTask</string>
+		<string>app.avuz.conecta.refreshTask</string>
+		<string>app.avuz.conecta.processingTask</string>
 	</array>
 	<key>CFBundleAllowMixedLocalizations</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Nextcloud</string>
+	<string>Avuz Conecta</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -33,23 +33,20 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>it.twsweb.Nextcloud</string>
+			<string>app.avuz.conecta</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>nextcloud</string>
+				<string>avuzconecta</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
-	<true/>
-	<key>ITSEncryptionExportComplianceCode</key>
-	<string>8e9f9874-938e-460b-a9be-f82cb3393971</string>
+	<false/>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
-		<string>nextcloudtalk</string>
-		<string>nextcloudnotes</string>
+		<string>avuzconecta</string>
 	</array>
 	<key>LSMinimumSystemVersion</key>
 	<string>12.3</string>
