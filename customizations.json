@@ -119,6 +119,16 @@
       "description": "pt-BR translation overrides replacing 'Nextcloud' with 'Avuz Conecta' in user-facing strings",
       "risk": "medium",
       "notes": "Binary .strings file. On upgrade, upstream may add or rename translation keys. Reapply branding overrides after pulling new upstream translations."
+    },
+    {
+      "id": "simulator-background-location-fix",
+      "type": "core",
+      "paths": [
+        "iOSClient/NCBackgroundLocationUploadManager.swift"
+      ],
+      "description": "Guard allowsBackgroundLocationUpdates behind #if !targetEnvironment(simulator) to prevent crash when backgrounding the app on the iOS Simulator",
+      "risk": "low",
+      "notes": "Simulator does not support CLClientIsBackgroundable, causing an NSInternalInconsistencyException on init. Real devices are unaffected. On upgrade, check if upstream added its own simulator guard to this file."
     }
   ]
 }
