@@ -20,7 +20,9 @@ class NCBackgroundLocationUploadManager: NSObject, CLLocationManagerDelegate {
 
         locationManager.delegate = self
         locationManager.activityType = .fitness
+        #if !targetEnvironment(simulator)
         locationManager.allowsBackgroundLocationUpdates = true
+        #endif
     }
 
     func start() {
