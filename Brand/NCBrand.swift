@@ -62,7 +62,7 @@ final class NCBrandOptions: @unchecked Sendable {
 
     var brand: String = "Avuz Conecta"
     var brandUserAgent: String = "AvuzConecta"
-    var textCopyrightNextcloudiOS: String = "Avuz Conecta for iOS %@ © 2025"
+    var textCopyrightNextcloudiOS: String = "Avuz Conecta for iOS %@ © 2026"
     var textCopyrightNextcloudServer: String = ""
     var loginBaseUrl: String = ""
     var pushNotificationServerProxy: String = ""
