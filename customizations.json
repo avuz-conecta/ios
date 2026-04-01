@@ -1,0 +1,124 @@
+{
+  "upstream_version": "7.2.2",
+  "source_branch": "avuz-customization-v7.2.2",
+  "entries": [
+    {
+      "id": "brand-config",
+      "type": "brand",
+      "paths": [
+        "Brand/NCBrand.swift"
+      ],
+      "description": "Core brand configuration: app name (Avuz Conecta), user agent, copyright, URLs (login, privacy, source, signup, app store), URL scheme (avuzconecta://), app groups, primary color (#f2f6fb), and feature flags (disable_show_more_nextcloud_apps_in_settings, disable_information_section_in_settings)",
+      "risk": "medium",
+      "notes": "NCBrandOptions and NCBrandColor classes. On upgrade, check for new feature flag properties added upstream — they won't exist in our copy and may cause build errors. loginBaseUrl is intentionally empty (server URL entered by user at login)."
+    },
+    {
+      "id": "brand-assets",
+      "type": "brand",
+      "paths": [
+        "Brand/Custom.xcassets/AppIcon.appiconset/",
+        "Brand/Custom.xcassets/logo.imageset/",
+        "Brand/Custom.xcassets/intro1.imageset/",
+        "Brand/Custom.xcassets/intro2.imageset/",
+        "Brand/Custom.xcassets/intro3.imageset/",
+        "Brand/Custom.xcassets/intro4.imageset/",
+        "assets/icon.png",
+        "assets/logo.png",
+        "assets/logo2.png",
+        "assets/network-diagram.png"
+      ],
+      "description": "Brand images: full app icon set (all sizes), logo (1x/2x/3x), 4 onboarding intro screens",
+      "risk": "low",
+      "notes": "Binary files, no conflict risk. If upstream adds new required icon sizes, add them to AppIcon.appiconset."
+    },
+    {
+      "id": "brand-plists",
+      "type": "brand",
+      "paths": [
+        "Brand/iOSClient.plist",
+        "Brand/File_Provider_Extension.plist",
+        "Brand/File_Provider_Extension_UI.plist",
+        "Brand/Share.plist",
+        "Brand/Notification_Service_Extension.plist"
+      ],
+      "description": "Info.plist files for all targets: CFBundleDisplayName set to 'Avuz Conecta', URL scheme avuzconecta://, BGTaskSchedulerPermittedIdentifiers (app.avuz.conecta.refreshTask, app.avuz.conecta.processingTask), document group app.avuz.conecta",
+      "risk": "low",
+      "notes": "On upgrade, check if upstream adds new plist keys (capabilities, background modes, etc.). File_Provider_Extension_UI.plist was previously missed and showed 'Nextcloud' — was fixed."
+    },
+    {
+      "id": "brand-entitlements",
+      "type": "brand",
+      "paths": [
+        "Brand/iOSClient.entitlements",
+        "Brand/File_Provider_Extension.entitlements",
+        "Brand/File_Provider_Extension_UI.entitlements",
+        "Brand/Share.entitlements",
+        "Brand/Widget.entitlements",
+        "Brand/WidgetDashboardIntentHandler.entitlements",
+        "Brand/Notification_Service_Extension.entitlements"
+      ],
+      "description": "App group entitlements across all targets: group.app.avuz.conecta and group.app.avuz.conecta.apps. Keychain access group: app.avuz.conecta",
+      "risk": "low",
+      "notes": "Must stay in sync with NCBrand.swift capabilitiesGroup values and Apple Developer portal App Groups. If upstream adds a new extension target, create a corresponding entitlements file."
+    },
+    {
+      "id": "intro-screen-simplified",
+      "type": "ui",
+      "paths": [
+        "Brand/Intro/NCIntroViewController.swift",
+        "Brand/Intro/NCIntro.storyboard"
+      ],
+      "description": "Removed 'Sign up with provider' button and 'Host your own server' link from the intro/login screen. Only the Login button remains.",
+      "risk": "low",
+      "notes": "Removed @IBOutlet buttonSignUp and buttonHost, their viewDidLoad setup, and their @IBAction handlers. Storyboard updated to remove both button subviews and fix layout constraints — login button now anchors to safe area bottom."
+    },
+    {
+      "id": "settings-information-section",
+      "type": "ui",
+      "paths": [
+        "iOSClient/Settings/Settings/NCSettingsView.swift"
+      ],
+      "description": "Wrapped the entire 'Information' section (Acknowledgements, Privacy, Source Code) in a guard on NCBrandOptions.shared.disable_information_section_in_settings. Set to true in NCBrand.swift so the section is hidden.",
+      "risk": "medium",
+      "notes": "On upgrade, if upstream restructures NCSettingsView.swift, this patch may conflict or silently stop wrapping the section. Verify the Information section is still hidden after rebasing."
+    },
+    {
+      "id": "lucid-banner-removal",
+      "type": "core",
+      "paths": [
+        "iOSClient/GUI/Lucid Banner/ErrorBannerView.swift",
+        "iOSClient/GUI/Lucid Banner/HudBannerView.swift",
+        "iOSClient/GUI/Lucid Banner/UploadBannerView.swift",
+        "iOSClient/GUI/NCHud.swift",
+        "iOSClient/GUI/NotificationPresenterUI.swift",
+        "Nextcloud.xcodeproj/project.pbxproj"
+      ],
+      "description": "Removed LucidBanner-based notification UI (3 files deleted). Replaced with JGProgressHUD-based NCHud and JDStatusBarNotification-based NotificationPresenterUI.",
+      "risk": "high",
+      "notes": "LucidBanner introduced its own UIWindow overlay which conflicted with firstWindow logic. All call sites referencing showErrorBanner/showHudBanner/showUploadBanner were updated throughout iOSClient/ to use the new APIs. On upgrade, watch for upstream adding new LucidBanner call sites."
+    },
+    {
+      "id": "window-api-simplification",
+      "type": "core",
+      "paths": [
+        "iOSClient/Extensions/UIApplication+Extension.swift",
+        "iOSClient/AppDelegate.swift",
+        "iOSClient/Login/NCLogin.swift",
+        "iOSClient/Networking/NCNetworking.swift"
+      ],
+      "description": "Replaced upstream's mainAppWindow (complex window filtering that excluded LucidBanner overlays) with a simpler firstWindow implementation that returns keyWindow of the first connected scene.",
+      "risk": "medium",
+      "notes": "Consequence of lucid-banner-removal. If upstream changes mainAppWindow behavior or renames it, these call sites need updating. On upgrade, search for any new mainAppWindow usages introduced upstream."
+    },
+    {
+      "id": "translation-pt-br",
+      "type": "translation",
+      "paths": [
+        "iOSClient/Supporting Files/pt-BR.lproj/Localizable.strings"
+      ],
+      "description": "pt-BR translation overrides replacing 'Nextcloud' with 'Avuz Conecta' in user-facing strings",
+      "risk": "medium",
+      "notes": "Binary .strings file. On upgrade, upstream may add or rename translation keys. Reapply branding overrides after pulling new upstream translations."
+    }
+  ]
+}

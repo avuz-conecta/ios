@@ -200,6 +200,7 @@ struct NCSettingsView: View {
                 }
             }
             // `Information` Section
+            if !NCBrandOptions.shared.disable_information_section_in_settings {
             Section(header: Text(NSLocalizedString("_information_", comment: "")).font(.headline), content: {
                 // Acknowledgements
                 Button(action: {
@@ -258,6 +259,7 @@ struct NCSettingsView: View {
                     }
                 }
             })
+            } // disable_information_section_in_settings
 #if DEBUG
             Section(header: Text("Debug").font(.headline), content: {
                 Button(action: {

@@ -7,8 +7,6 @@ import UIKit
 
 class NCIntroViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     @IBOutlet weak var buttonLogin: UIButton!
-    @IBOutlet weak var buttonSignUp: UIButton!
-    @IBOutlet weak var buttonHost: UIButton!
     @IBOutlet weak var introCollectionView: UICollectionView!
     @IBOutlet weak var pageControl: UIPageControl!
 
@@ -64,16 +62,6 @@ class NCIntroViewController: UIViewController, UICollectionViewDataSource, UICol
         buttonLogin.setTitleColor(NCBrandColor.shared.customer, for: .normal)
         buttonLogin.backgroundColor = textColor
         buttonLogin.setTitle(NSLocalizedString("_log_in_", comment: ""), for: .normal)
-
-        buttonSignUp.layer.cornerRadius = 8
-        buttonSignUp.setTitleColor(textColor, for: .normal)
-        buttonSignUp.backgroundColor = textColor.withAlphaComponent(0.2)
-        buttonSignUp.titleLabel?.adjustsFontSizeToFitWidth = true
-        buttonSignUp.setTitle(NSLocalizedString("_sign_up_", comment: ""), for: .normal)
-
-        buttonHost.layer.cornerRadius = 20
-        buttonHost.setTitle(NSLocalizedString("_host_your_own_server", comment: ""), for: .normal)
-        buttonHost.setTitleColor(textColor.withAlphaComponent(0.5), for: .normal)
 
         introCollectionView.register(UINib(nibName: "NCIntroCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "introCell")
         introCollectionView.dataSource = self
@@ -164,19 +152,6 @@ class NCIntroViewController: UIViewController, UICollectionViewDataSource, UICol
         }
     }
 
-    @IBAction func signupWithProvider(_ sender: Any) {
-        let loginProvider = NCLoginProvider()
-        loginProvider.controller = self.controller
-        loginProvider.initialURLString = NCBrandOptions.shared.linkloginPreferredProviders
-        loginProvider.presentingViewController = self
-        loginProvider.startAuthentication()
-        self.activeLoginProvider = loginProvider
-    }
-
-    @IBAction func host(_ sender: Any) {
-        guard let url = URL(string: NCBrandOptions.shared.linkLoginHost) else { return }
-        UIApplication.shared.open(url)
-    }
 }
 
 extension UINavigationController {
