@@ -65,3 +65,22 @@ Our 6 commits touch (conflict-prone in **bold**):
 - `CLAUDE.md`, `customizations.json`, `assets/` — fork-only, no conflict.
 
 Post-rebase: bump MARKETING_VERSION intent (keep Avuz scheme vs adopt 34.1.4?), verify build on iPhone + iPad, re-check branding surfaces.
+
+---
+
+## Rebase result (done)
+
+Rebased cleanly onto **34.1.4**; all 6 customizations replayed. Backup ref: `backup/pre-34.1.4-rebase-20260913`.
+
+Conflicts resolved:
+- `Brand/Custom.xcassets/AppIcon.appiconset/Contents.json` — adopted upstream **single universal 1024** icon format (old multi-size PNGs left as harmless orphans; branding replaces icon).
+- `iOSClient/Settings/Settings/NCSettingsView.swift` — kept our `disable_information_section_in_settings` guard **and** upstream `.font(.headline)`; DEBUG crash-test section kept outside the guard.
+- `Brand/Intro/NCIntroViewController.swift` — kept our removal of `signupWithProvider`/`host` (single-screen onboarding; storyboard has no dangling refs).
+- `Brand/NCBrand.swift` — kept Avuz brand color `#f2f6fb` / black text.
+- `Nextcloud.xcodeproj/project.pbxproj` — rule: **upstream build settings + Avuz identity**. Adopted `DEAD_CODE_STRIPPING = YES`, kept `DEVELOPMENT_TEAM = HH38JC58JL`, `CODE_SIGN_STYLE = Automatic`, bundle `app.avuz.conecta`, `CURRENT_PROJECT_VERSION = 1`.
+
+State: app `MARKETING_VERSION = 34.1.4`; display name still "Avuz Conecta" (→ "Conecta Drive" is the branding task).
+
+### Build note
+- No `GoogleService-Info.plist` at repo root — needed at runtime (Firebase). Use the [mock config](https://github.com/firebase/quickstart-ios/blob/master/mock-GoogleService-Info.plist) for dev builds.
+
