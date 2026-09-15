@@ -5,138 +5,111 @@
 
 import UIKit
 
-class NCIntroViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
-    @IBOutlet weak var buttonLogin: UIButton!
-    @IBOutlet weak var introCollectionView: UICollectionView!
-    @IBOutlet weak var pageControl: UIPageControl!
+private enum IntroLayout {
+    static let backgroundColor = UIColor(red: 241.0 / 255.0, green: 241.0 / 255.0, blue: 241.0 / 255.0, alpha: 1.0) // #f1f1f1
+    static let foregroundColor = UIColor(red: 51.0 / 255.0, green: 51.0 / 255.0, blue: 51.0 / 255.0, alpha: 1.0)    // #333333
+    static let buttonColor: UIColor = .black
+    static let buttonTextColor: UIColor = .white
+    static let folderSizePhone: CGFloat = 140
+    static let folderSizePad: CGFloat = 220
+    static let titleSizePhone: CGFloat = 18
+    static let titleSizePad: CGFloat = 24
+    static let buttonHeight: CGFloat = 50
+    static let horizontalMargin: CGFloat = 32
+    static let folderToTitleGap: CGFloat = 24
+    static let titleToButtonGap: CGFloat = 40
+}
 
-    weak var delegate: NCIntroViewController?
+class NCIntroViewController: UIViewController {
     // Controller
     var controller: NCMainTabBarController?
 
-    private let appDelegate = (UIApplication.shared.delegate as? AppDelegate)!
-    private let titles = [NSLocalizedString("_intro_1_title_", comment: ""), NSLocalizedString("_intro_2_title_", comment: ""), NSLocalizedString("_intro_3_title_", comment: ""), NSLocalizedString("_intro_4_title_", comment: "")]
-    private let images = [UIImage(named: "intro1"), UIImage(named: "intro2"), UIImage(named: "intro3"), UIImage(named: "intro4")]
-    private var timer: Timer?
-    private var textColor: UIColor = .white
-    private var textColorOpponent: UIColor = .black
-    private var activeLoginProvider: NCLoginProvider?
+    private var isPad: Bool { traitCollection.userInterfaceIdiom == .pad }
 
     // MARK: - View Life Cycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let isTooLight = NCBrandColor.shared.customer.isTooLight()
-        let isTooDark = NCBrandColor.shared.customer.isTooDark()
-
-        if isTooLight {
-            textColor = .black
-            textColorOpponent = .white
-        } else if isTooDark {
-            textColor = .white
-            textColorOpponent = .black
-        } else {
-            textColor = .white
-            textColorOpponent = .black
-        }
+        overrideUserInterfaceStyle = .light
+        view.backgroundColor = IntroLayout.backgroundColor
 
         let navBarAppearance = UINavigationBarAppearance()
         navBarAppearance.configureWithTransparentBackground()
         navBarAppearance.shadowColor = .clear
         navBarAppearance.shadowImage = UIImage()
-        self.navigationController?.navigationBar.standardAppearance = navBarAppearance
-        self.navigationController?.view.backgroundColor = NCBrandColor.shared.customer
-        self.navigationController?.navigationBar.tintColor = textColor
+        navigationController?.navigationBar.standardAppearance = navBarAppearance
+        navigationController?.navigationBar.tintColor = IntroLayout.foregroundColor
+        navigationController?.view.backgroundColor = IntroLayout.backgroundColor
+        navigationController?.overrideUserInterfaceStyle = .light
 
         if !NCManageDatabase.shared.getAllTableAccount().isEmpty {
-            let navigationItemCancel = UIBarButtonItem(image: UIImage(systemName: "xmark"), style: .plain, target: self, action: #selector(actionCancel(_:)))
-            navigationItemCancel.tintColor = textColor
-            navigationItem.rightBarButtonItem = navigationItemCancel
+            let cancel = UIBarButtonItem(image: UIImage(systemName: "xmark"), style: .plain, target: self, action: #selector(actionCancel(_:)))
+            cancel.tintColor = IntroLayout.foregroundColor
+            navigationItem.rightBarButtonItem = cancel
         }
 
-        pageControl.currentPageIndicatorTintColor = textColor
-        pageControl.pageIndicatorTintColor = .lightGray
-
-        buttonLogin.layer.cornerRadius = 8
-        buttonLogin.setTitleColor(NCBrandColor.shared.customer, for: .normal)
-        buttonLogin.backgroundColor = textColor
-        buttonLogin.setTitle(NSLocalizedString("_log_in_", comment: ""), for: .normal)
-
-        introCollectionView.register(UINib(nibName: "NCIntroCollectionViewCell", bundle: nil), forCellWithReuseIdentifier: "introCell")
-        introCollectionView.dataSource = self
-        introCollectionView.delegate = self
-        introCollectionView.backgroundColor = NCBrandColor.shared.customer
-        pageControl.numberOfPages = self.titles.count
-
-        view.backgroundColor = NCBrandColor.shared.customer
-
-        self.timer = Timer.scheduledTimer(timeInterval: 4, target: self, selector: (#selector(self.autoScroll(_:))), userInfo: nil, repeats: true)
+        buildLayout()
     }
 
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        if traitCollection.userInterfaceStyle == .light {
-            return .lightContent
-        } else {
-            return .darkContent
-        }
+        return .darkContent
     }
 
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
+    // MARK: - Layout
 
-        timer?.invalidate()
-        timer = nil
-    }
+    private func buildLayout() {
+        let folder = UIImageView()
+        folder.translatesAutoresizingMaskIntoConstraints = false
+        folder.contentMode = .scaleAspectFit
+        folder.image = UIImage(named: "folderIntro")?.withRenderingMode(.alwaysTemplate)
+        folder.tintColor = IntroLayout.foregroundColor
 
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
+        let title = UILabel()
+        title.translatesAutoresizingMaskIntoConstraints = false
+        title.numberOfLines = 0
+        title.textAlignment = .center
+        title.textColor = IntroLayout.foregroundColor
+        title.font = .systemFont(ofSize: isPad ? IntroLayout.titleSizePad : IntroLayout.titleSizePhone, weight: .regular)
+        title.text = NSLocalizedString("_intro_title_", value: "Armazene, organize e compartilhe arquivos no Drive", comment: "")
 
-        coordinator.animate(alongsideTransition: nil) { _ in
-            self.pageControl?.currentPage = 0
-            self.introCollectionView?.collectionViewLayout.invalidateLayout()
-        }
-    }
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.backgroundColor = IntroLayout.buttonColor
+        button.setTitleColor(IntroLayout.buttonTextColor, for: .normal)
+        button.setTitle(NSLocalizedString("_log_in_", comment: ""), for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        button.layer.cornerRadius = IntroLayout.buttonHeight / 2
+        button.accessibilityIdentifier = "login"
+        button.addTarget(self, action: #selector(login(_:)), for: .touchUpInside)
 
-    @objc func autoScroll(_ sender: Any?) {
-        if pageControl.currentPage + 1 >= titles.count {
-            pageControl.currentPage = 0
-        } else {
-            pageControl.currentPage += 1
-        }
-        introCollectionView.scrollToItem(at: IndexPath(row: pageControl.currentPage, section: 0), at: .centeredHorizontally, animated: true)
-    }
+        let stack = UIStackView(arrangedSubviews: [folder, title])
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = IntroLayout.folderToTitleGap
 
-    func collectionView(_ collectionView: UICollectionView, targetContentOffsetForProposedContentOffset proposedContentOffset: CGPoint) -> CGPoint {
-        return CGPoint.zero
-    }
+        view.addSubview(stack)
+        view.addSubview(button)
 
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return titles.count
-    }
+        let folderSize = isPad ? IntroLayout.folderSizePad : IntroLayout.folderSizePhone
 
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = (collectionView.dequeueReusableCell(withReuseIdentifier: "introCell", for: indexPath) as? NCIntroCollectionViewCell)!
-        cell.backgroundColor = NCBrandColor.shared.customer
-        cell.indexPath = indexPath
-        cell.titleLabel.textColor = textColor
-        cell.titleLabel.text = titles[indexPath.row]
-        cell.imageView.image = images[indexPath.row]
-        return cell
-    }
+        NSLayoutConstraint.activate([
+            folder.widthAnchor.constraint(equalToConstant: folderSize),
+            folder.heightAnchor.constraint(equalToConstant: folderSize),
 
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return collectionView.bounds.size
-    }
+            stack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            stack.leadingAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.leadingAnchor, constant: IntroLayout.horizontalMargin),
+            stack.trailingAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -IntroLayout.horizontalMargin),
 
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        timer = Timer.scheduledTimer(timeInterval: 4, target: self, selector: (#selector(autoScroll(_:))), userInfo: nil, repeats: true)
-        pageControl.currentPage = Int(scrollView.contentOffset.x) / Int(scrollView.frame.width)
-    }
+            title.widthAnchor.constraint(lessThanOrEqualToConstant: isPad ? 480 : 320),
 
-    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        timer?.invalidate()
-        timer = nil
+            button.topAnchor.constraint(equalTo: stack.bottomAnchor, constant: IntroLayout.titleToButtonGap),
+            button.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: IntroLayout.horizontalMargin),
+            button.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -IntroLayout.horizontalMargin),
+            button.heightAnchor.constraint(equalToConstant: IntroLayout.buttonHeight)
+        ])
     }
 
     // MARK: - Action
@@ -145,13 +118,12 @@ class NCIntroViewController: UIViewController, UICollectionViewDataSource, UICol
         dismiss(animated: true) { }
     }
 
-    @IBAction func login(_ sender: Any) {
+    @objc func login(_ sender: Any) {
         if let viewController = UIStoryboard(name: "NCLogin", bundle: nil).instantiateViewController(withIdentifier: "NCLogin") as? NCLogin {
             viewController.controller = self.controller
-            self.navigationController?.pushViewController(viewController, animated: true)
+            navigationController?.pushViewController(viewController, animated: true)
         }
     }
-
 }
 
 extension UINavigationController {

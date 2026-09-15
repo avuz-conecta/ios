@@ -60,9 +60,9 @@ struct NextcloudVersion: Comparable {
 final class NCBrandOptions: @unchecked Sendable {
     static let shared = NCBrandOptions()
 
-    var brand: String = "Avuz Conecta"
+    var brand: String = "Conecta Drive"
     var brandUserAgent: String = "AvuzConecta"
-    var textCopyrightNextcloudiOS: String = "Avuz Conecta for iOS %@ © 2026"
+    var textCopyrightNextcloudiOS: String = "Conecta Drive for iOS %@ © 2026"
     var textCopyrightNextcloudServer: String = ""
     var loginBaseUrl: String = ""
     var pushNotificationServerProxy: String = ""

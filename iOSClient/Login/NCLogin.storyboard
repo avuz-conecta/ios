@@ -19,10 +19,10 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="BpI-xK-1SU">
-                                <rect key="frame" x="100" y="188" width="240" height="120"/>
+                                <rect key="frame" x="140" y="188" width="160" height="80"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="120" id="E9d-5O-bto"/>
-                                    <constraint firstAttribute="width" constant="240" id="xwH-mh-yDU"/>
+                                    <constraint firstAttribute="height" constant="80" id="E9d-5O-bto"/>
+                                    <constraint firstAttribute="width" constant="160" id="xwH-mh-yDU"/>
                                 </constraints>
                             </imageView>
                             <textField opaque="NO" clipsSubviews="YES" tag="1" contentMode="scaleToFill" layoutMarginsFollowReadableWidth="YES" insetsLayoutMarginsFromSafeArea="NO" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="  Server address https://…" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="szn-G7-5sK">
@@ -43,7 +43,7 @@
                                     <constraint firstAttribute="height" constant="40" id="3yh-bo-Bzr"/>
                                     <constraint firstAttribute="width" constant="40" id="yLC-Ai-3Ob"/>
                                 </constraints>
-                                <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="tintColor" red="0.33333333333333331" green="0.33333333333333331" blue="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <state key="normal">
                                     <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     <imageReference key="image" image="arrow.right" catalog="system" symbolScale="large"/>

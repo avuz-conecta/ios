@@ -10,6 +10,12 @@ import SwiftUI
 import SafariServices
 import LucidBanner
 
+private enum LoginBrand {
+    static let backgroundColor = UIColor(red: 241.0 / 255.0, green: 241.0 / 255.0, blue: 241.0 / 255.0, alpha: 1.0) // #f1f1f1
+    static let textColor = UIColor(red: 51.0 / 255.0, green: 51.0 / 255.0, blue: 51.0 / 255.0, alpha: 1.0)          // #333333
+    static let hintColor = UIColor(red: 77.0 / 255.0, green: 77.0 / 255.0, blue: 77.0 / 255.0, alpha: 1.0)          // #4d4d4d
+}
+
 class NCLogin: UIViewController, UITextFieldDelegate, NCLoginQRCodeDelegate {
     @IBOutlet weak var imageBrand: UIImageView!
     @IBOutlet weak var imageBrandConstraintY: NSLayoutConstraint!
@@ -54,17 +60,10 @@ class NCLogin: UIViewController, UITextFieldDelegate, NCLoginQRCodeDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Text color
-        if NCBrandColor.shared.customer.isTooLight() {
-            textColor = .black
-            textColorOpponent = .white
-        } else if NCBrandColor.shared.customer.isTooDark() {
-            textColor = .white
-            textColorOpponent = .black
-        } else {
-            textColor = .white
-            textColorOpponent = .black
-        }
+        // Fixed light surface (must not invert in dark mode)
+        overrideUserInterfaceStyle = .light
+        textColor = LoginBrand.textColor
+        textColorOpponent = .white
 
         // Image Brand
         imageBrand.image = UIImage(named: "logo")
@@ -79,7 +78,7 @@ class NCLogin: UIViewController, UITextFieldDelegate, NCLoginQRCodeDelegate {
         baseUrlTextField.leftViewMode = .always
         baseUrlTextField.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 35, height: baseUrlTextField.frame.height))
         baseUrlTextField.rightViewMode = .always
-        baseUrlTextField.attributedPlaceholder = NSAttributedString(string: NSLocalizedString("_login_url_", comment: ""), attributes: [NSAttributedString.Key.foregroundColor: textColor.withAlphaComponent(0.5)])
+        baseUrlTextField.attributedPlaceholder = NSAttributedString(string: NSLocalizedString("_login_url_", comment: ""), attributes: [NSAttributedString.Key.foregroundColor: LoginBrand.hintColor])
         baseUrlTextField.delegate = self
 
         baseUrlTextField.isEnabled = !NCBrandOptions.shared.disable_request_login_url
@@ -88,8 +87,10 @@ class NCLogin: UIViewController, UITextFieldDelegate, NCLoginQRCodeDelegate {
         loginAddressDetail.textColor = textColor
         loginAddressDetail.text = String.localizedStringWithFormat(NSLocalizedString("_login_address_detail_", comment: ""), NCBrandOptions.shared.brand)
 
-        // QR code button
-        qrCode.tintColor = NCBrandColor.shared.customer.isTooLight() ? .black : .white
+        // QR code button (hidden for Conecta Drive)
+        qrCode.tintColor = LoginBrand.textColor
+        qrCode.isHidden = true
+        qrCode.isEnabled = false
 
         // brand
         if NCBrandOptions.shared.disable_request_login_url {
@@ -112,8 +113,9 @@ class NCLogin: UIViewController, UITextFieldDelegate, NCLoginQRCodeDelegate {
         navBarAppearance.titleTextAttributes = [.foregroundColor: textColor]
         navBarAppearance.largeTitleTextAttributes = [.foregroundColor: textColor]
         self.navigationController?.navigationBar.standardAppearance = navBarAppearance
-        self.navigationController?.view.backgroundColor = NCBrandColor.shared.customer
+        self.navigationController?.view.backgroundColor = LoginBrand.backgroundColor
         self.navigationController?.navigationBar.tintColor = textColor
+        self.navigationController?.overrideUserInterfaceStyle = .light
 
         if let dirGroupApps = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: NCBrandOptions.shared.capabilitiesGroupApps) {
             // Nextcloud update share accounts
@@ -139,7 +141,7 @@ class NCLogin: UIViewController, UITextFieldDelegate, NCLoginQRCodeDelegate {
         }
 
         self.navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
-        view.backgroundColor = NCBrandColor.shared.customer
+        view.backgroundColor = LoginBrand.backgroundColor
 
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)

@@ -81,6 +81,19 @@ Conflicts resolved:
 
 State: app `MARKETING_VERSION = 34.1.4`; display name still "Avuz Conecta" (→ "Conecta Drive" is the branding task).
 
+## Conecta Drive branding (on 34.1.4)
+
+Applied per handoff spec + updates:
+- **Wordmark logo 160×80** (2:1) on splash + login (superseded 200×100). Regenerated `logo.imageset` from `avuz-server/.../logo-login.png`; sizes fixed in `LaunchScreen.storyboard` and `NCLogin.storyboard`.
+- **App name → Conecta Drive** — `iOSClient.plist` CFBundleDisplayName + `NCBrand.swift` brand / copyright. Bundle id / account type / user-agent unchanged.
+- **App icon** — 3D folder art composited on white, opaque 1024 (`AppIcon.appiconset`, single universal). Orphan multi-size PNGs removed.
+- **Launch screen** — `#f1f1f1`, logo centered 160×80.
+- **Onboarding (`NCIntroViewController` + `NCIntro.storyboard`)** — rewritten to a single static screen (folder tinted `#333333`, regular-weight PT title, black "Entrar" pill). No page dots / swipe / signup / host links. Light-locked (`overrideUserInterfaceStyle = .light`). Folder 140pt phone / 220pt iPad. New `folderIntro.imageset` (template-rendering).
+- **Login (`NCLogin`)** — logo 160×80 on top; field text `#333333` / hint `#4d4d4d`; QR button hidden; submit arrow tinted dark; `#f1f1f1` bg; light-locked. Keyboard-avoidance kept.
+- **Dots-only mark** — `logoDots.imageset` created (trimmed 3-dots), but placement **skipped for now** — iOS has no Android-style drawer header (top-left is the account avatar + UIMenu). Decide surface with live screens.
+
+Build: `** BUILD SUCCEEDED **` (simulator, signing off).
+
 ### Build note
 - No `GoogleService-Info.plist` at repo root — needed at runtime (Firebase). Use the [mock config](https://github.com/firebase/quickstart-ios/blob/master/mock-GoogleService-Info.plist) for dev builds.
 
