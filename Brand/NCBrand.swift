@@ -72,7 +72,7 @@ final class NCBrandOptions: @unchecked Sendable {
     var privacy: String = "https://avuz.app/privacy"
     var sourceCode: String = "https://github.com/avuz/conecta-ios"
     var mobileconfig: String = "/remote.php/dav/provisioning/apple-provisioning.mobileconfig"
-    var appStoreUrl: String = "https://apps.apple.com/app/avuz-conecta/id000000000"
+    var appStoreUrl: String = "https://apps.apple.com/app/id6757722200"
 
     // Auto Upload default folder
     var folderDefaultAutoUpload: String = "Photos"
