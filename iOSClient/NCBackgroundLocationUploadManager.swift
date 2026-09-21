@@ -21,7 +21,10 @@ class NCBackgroundLocationUploadManager: NSObject, CLLocationManagerDelegate {
         locationManager.delegate = self
         locationManager.activityType = .fitness
         #if !targetEnvironment(simulator)
-        locationManager.allowsBackgroundLocationUpdates = true
+        let backgroundModes = Bundle.main.infoDictionary?["UIBackgroundModes"] as? [String] ?? []
+        if backgroundModes.contains("location") {
+            locationManager.allowsBackgroundLocationUpdates = true
+        }
         #endif
     }
 
