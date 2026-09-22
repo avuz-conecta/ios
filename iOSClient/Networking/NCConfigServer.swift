@@ -70,13 +70,17 @@ final class NCConfigServer: NSObject, UIActionSheetDelegate, URLSessionDelegate 
     internal func start(data: Data) {
         self.configData = data
         self.localServer = HttpServer()
+        // Bind IPv4 loopback only so Safari can reach the profile server without
+        // triggering the iOS Local Network permission (Swifter defaults to
+        // in6addr_any / all interfaces, which iOS blocks without it).
+        self.localServer?.listenAddressIPv4 = "127.0.0.1"
         self.setupHandlers()
 
         let page = self.baseURL(pathComponent: "install/")
         let url = URL(string: page)!
         if UIApplication.shared.canOpenURL(url as URL) {
             do {
-                try localServer?.start(listeningPort, forceIPv4: false, priority: .default)
+                try localServer?.start(listeningPort, forceIPv4: true, priority: .default)
                 serverState = .Ready
                 registerForNotifications()
                 UIApplication.shared.open(url)
@@ -124,7 +128,7 @@ final class NCConfigServer: NSObject, UIActionSheetDelegate, URLSessionDelegate 
     }
 
     private func baseURL(pathComponent: String?) -> String {
-        var page = "http://localhost:\(listeningPort)"
+        var page = "http://127.0.0.1:\(listeningPort)"
         if let component = pathComponent {
             page += "/\(component)"
         }

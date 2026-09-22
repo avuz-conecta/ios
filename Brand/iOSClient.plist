@@ -61,6 +61,8 @@
 	</dict>
 	<key>NSContactsUsageDescription</key>
 	<string>Contacts access is used to suggest people when sharing files and folders with others.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>A temporary local connection is used to install the Calendar &amp; Contacts configuration profile on your device.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is required to scan documents and make photo and video.</string>
 	<key>NSFaceIDUsageDescription</key>
