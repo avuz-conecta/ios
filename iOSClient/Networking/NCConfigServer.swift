@@ -4,14 +4,21 @@
 
 import Foundation
 import UIKit
-import Swifter
 import NextcloudKit
 
-// Source:
-// https://stackoverflow.com/questions/2338035/installing-a-configuration-profile-on-iphone-programmatically
+// Downloads the CalDAV/CardDAV `.mobileconfig` (with the account's auth headers)
+// and hands it to iOS via UIDocumentInteractionController so the system presents
+// the "Install Profile" flow. This is browser-independent — the previous
+// approach opened the profile URL in the default browser, which fails when the
+// default browser is not Safari (only Safari registers a downloaded profile for
+// installation), producing a redirect loop in e.g. Chrome.
 
-final class NCConfigServer: NSObject, UIActionSheetDelegate, URLSessionDelegate {
+@MainActor
+final class NCConfigServer: NSObject, URLSessionDelegate, UIDocumentInteractionControllerDelegate {
     let controller: NCMainTabBarController?
+    private var documentController: UIDocumentInteractionController?
+    private var fileURL: URL?
+
     var windowScene: UIWindowScene? {
         SceneManager.shared.getWindowScene(controller: controller)
     }
@@ -31,171 +38,76 @@ final class NCConfigServer: NSObject, UIActionSheetDelegate, URLSessionDelegate 
 
         let dataTask = defaultSession.dataTask(with: urlRequest) { data, _, error in
             if let error {
-                Task {
+                Task { @MainActor in
                     await showErrorBanner(windowScene: self.windowScene, error: NKError(error: error))
                 }
-            } else if let data = data {
-                self.start(data: data)
+            } else if let data, !data.isEmpty {
+                Task { @MainActor in
+                    self.presentProfile(data: data)
+                }
             }
         }
         dataTask.resume()
     }
 
-    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping @Sendable (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+    nonisolated func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping @Sendable (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         NCNetworking.shared.checkTrustedChallenge(session, didReceive: challenge, completionHandler: completionHandler)
     }
 
-    // swiftlint:disable identifier_name
-    private enum ConfigState: Int {
-        case Stopped, Ready, InstalledConfig, BackToApp
-    }
-    // swiftlint:enable identifier_name
+    // MARK: - Profile install
 
-    internal let listeningPort: in_port_t = 8080
-    internal var configName: String = "Profile install"
-    private var localServer: HttpServer?
-    private var returnURL: String = ""
-    private var configData: Data?
+    private func presentProfile(data: Data) {
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("configuration.mobileconfig")
+        do {
+            try data.write(to: fileURL, options: .atomic)
+        } catch {
+            Task { @MainActor in
+                await showErrorBanner(windowScene: self.windowScene, error: NKError(error: error))
+            }
+            return
+        }
+        self.fileURL = fileURL
 
-    private var serverState: ConfigState = .Stopped
-    private var registeredForNotifications = false
-    private var backgroundTask = UIBackgroundTaskIdentifier.invalid
+        DispatchQueue.main.async {
+            guard let viewController = self.topViewController else { return }
+            let documentController = UIDocumentInteractionController(url: fileURL)
+            documentController.uti = "com.apple.mobileconfig"
+            documentController.delegate = self
+            self.documentController = documentController
 
-    deinit {
-        unregisterFromNotifications()
-    }
-
-    // MARK: - Control functions
-
-    internal func start(data: Data) {
-        self.configData = data
-        self.localServer = HttpServer()
-        // Bind IPv4 loopback only so Safari can reach the profile server without
-        // triggering the iOS Local Network permission (Swifter defaults to
-        // in6addr_any / all interfaces, which iOS blocks without it).
-        self.localServer?.listenAddressIPv4 = "127.0.0.1"
-        self.setupHandlers()
-
-        let page = self.baseURL(pathComponent: "install/")
-        let url = URL(string: page)!
-        if UIApplication.shared.canOpenURL(url as URL) {
-            do {
-                try localServer?.start(listeningPort, forceIPv4: true, priority: .default)
-                serverState = .Ready
-                registerForNotifications()
-                UIApplication.shared.open(url)
-            } catch {
-                Task {
-                    await showErrorBanner(windowScene: self.windowScene, error: NKError(error: error))
-                }
-                self.stop()
+            if !documentController.presentPreview(animated: true) {
+                documentController.presentOptionsMenu(from: viewController.view.bounds, in: viewController.view, animated: true)
             }
         }
     }
 
-    internal func stop() {
-        if serverState != .Stopped {
-            serverState = .Stopped
-            unregisterFromNotifications()
+    private var topViewController: UIViewController? {
+        var top: UIViewController? = controller
+        while let presented = top?.presentedViewController {
+            top = presented
         }
+        return top
     }
 
-    // MARK: - Private functions
-
-    private func setupHandlers() {
-        localServer?["/install"] = { _ in
-            switch self.serverState {
-            case .Stopped:
-                return .notFound()
-            case .Ready:
-                self.serverState = .InstalledConfig
-                return HttpResponse.raw(200, "OK", ["Content-Type": "application/x-apple-aspen-config"], { writer in
-                    do {
-                        if let configData = self.configData {
-                            try writer.write(configData)
-                        }
-                    } catch {
-                        print("Failed to write response data")
-                    }
-                })
-            case .InstalledConfig:
-                return .movedPermanently(self.returnURL)
-            case .BackToApp:
-                let page = self.basePage(pathComponent: nil)
-                return .ok(.html(page))
-            }
+    private func cleanup() {
+        if let fileURL {
+            try? FileManager.default.removeItem(at: fileURL)
         }
+        fileURL = nil
+        documentController = nil
     }
 
-    private func baseURL(pathComponent: String?) -> String {
-        var page = "http://127.0.0.1:\(listeningPort)"
-        if let component = pathComponent {
-            page += "/\(component)"
-        }
-        return page
+    // MARK: - UIDocumentInteractionControllerDelegate
+
+    func documentInteractionControllerViewControllerForPreview(_ controller: UIDocumentInteractionController) -> UIViewController {
+        return topViewController ?? UIViewController()
     }
 
-    private func basePage(pathComponent: String?) -> String {
-        var page = "<!doctype html><html>" + "<head><meta charset='utf-8'><title>\(self.configName)</title></head>"
-        if let component = pathComponent {
-            let script = "function load() { window.location.href='\(self.baseURL(pathComponent: component))'; } window.setInterval(load, 800);"
-            page += "<script>\(script)</script>"
-        }
-        page += "<body></body></html>"
-        return page
+    func documentInteractionControllerDidEndPreview(_ controller: UIDocumentInteractionController) {
+        cleanup()
     }
 
-    private func returnedToApp() {
-        if serverState != .Stopped {
-            serverState = .BackToApp
-            localServer?.stop()
-        }
-    }
-
-    private func registerForNotifications() {
-        if !registeredForNotifications {
-            let notificationCenter = NotificationCenter.default
-            notificationCenter.addObserver(self, selector: #selector(didEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
-            notificationCenter.addObserver(self, selector: #selector(willEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
-            registeredForNotifications = true
-        }
-    }
-
-    private func unregisterFromNotifications() {
-        if registeredForNotifications {
-            let notificationCenter = NotificationCenter.default
-            notificationCenter.removeObserver(self, name: UIApplication.didEnterBackgroundNotification, object: nil)
-            notificationCenter.removeObserver(self, name: UIApplication.willEnterForegroundNotification, object: nil)
-            registeredForNotifications = false
-        }
-    }
-
-    @objc internal func didEnterBackground(notification: NSNotification) {
-        if serverState != .Stopped {
-            startBackgroundTask()
-        }
-    }
-
-    @objc internal func willEnterForeground(notification: NSNotification) {
-        if backgroundTask != UIBackgroundTaskIdentifier.invalid {
-            stopBackgroundTask()
-            returnedToApp()
-        }
-    }
-
-    private func startBackgroundTask() {
-        let application = UIApplication.shared
-        backgroundTask = application.beginBackgroundTask(expirationHandler: {
-            DispatchQueue.main.async {
-                self.stopBackgroundTask()
-            }
-        })
-    }
-
-    private func stopBackgroundTask() {
-        if backgroundTask != UIBackgroundTaskIdentifier.invalid {
-            UIApplication.shared.endBackgroundTask(self.backgroundTask)
-            backgroundTask = UIBackgroundTaskIdentifier.invalid
-        }
+    func documentInteractionControllerDidDismissOptionsMenu(_ controller: UIDocumentInteractionController) {
+        cleanup()
     }
 }
