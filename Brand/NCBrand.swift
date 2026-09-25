@@ -94,7 +94,7 @@ final class NCBrandOptions: @unchecked Sendable {
     var disable_openin_file: Bool = false                                                       // Don't touch me !!
     var disable_crash_service: Bool = false
     var disable_log: Bool = false
-    var disable_mobileconfig: Bool = false  
+    var disable_mobileconfig: Bool = true
     var disable_show_more_nextcloud_apps_in_settings: Bool = true
     var doNotAskPasscodeAtStartup: Bool = false
     var disable_source_code_in_settings: Bool = false
